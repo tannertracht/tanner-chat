@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tanner Chat - Powered by socket.io</title>
+    <style>
+	  :root { --chat-window-width: 85%; --side-button-pos: 85.5%;}
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      .chat-form { padding: 1%; position: fixed; bottom: 1%; width: var(--chat-window-width); height: 10%; background: black;}
+      .chat-input { border: 0; padding: 10px; width: 70%; height: 98%; }
+      form button { width: 29%; background: teal; padding: 1%; height: 98%; font-size: 100%; border: none; }
+      #messages { list-style-type: none; margin: 0; padding: 0; width: 100%; height: 89%; overflow-y: scroll;}
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+	  #users-in-room { height: 15%; overflow-y: scroll; }
+	  #users-in-room li { list-style-type: none; padding-left: 3px; color: blue; }
+	  #info-wall {float:left; width: 15%; height: 100vh;}
+	  #chat-window {height: 100vh;  width: var(--chat-window-width); float: left;}
+    </style>
+  </head>
+  <body>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<div id="chat-window">
+		<ul id="messages"></ul>
+		<form action="", id="nickname" class="chat-form">
+			<input id="n" autocomplete="off" class="chat-input" /><button>Set Nickname</button>
+		</form>
+		<form action="", id="textBox" class="chat-form", style="display: none;">
+			<input id="m" autocomplete="off" class="chat-input" /><button>Send</button>
+		</form>
+	</div>
+	<div id="info-wall">
+		<div> Current Room - <span id="current-room" style="color: red; font-size: larger;"> Main </span> </div>
+		<div id="usersOnline">Tanner Chatter's Online 0</div>
+		<br>
+		<div> Users in Room  </div>
+		<ul id="users-in-room"> </ul>
+		<form action="" id="room-switcher"> 
+			<input type="radio" id="create-room" name="room-buttons"> Create Room 
+			<input type="radio" id="join-room" name="room-buttons"> Join Room <br>
+			<input id="room-name" autocomplete="off" placeholder="room name"> <br>
+			<input id="room-password" autocomplete="off" placeholder="room password">
+			<button> Submit </button>
+		</form>
+	</div>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+  $(function () {
+	function updateScroll(){
+		var element = document.getElementById("messages");
+		element.scrollTop = element.scrollHeight;
+	}
+    var socket = io();
+	var currentRoom = false;
+    $('#textBox').submit(function(){
+      socket.emit('chat message', $('#m').val(), currentRoom);
+      $('#m').val('');
+      return false;
+    });
+	$('#nickname').submit(function(){
+		socket.emit('set nickname', $('#n').val());
+		$('#nickname').css("display", "none");
+		$('#textBox').css("display", "inline");
+		return false;
+    });
+	$('#room-switcher').submit(function() {
+		if($('#create-room').is(':checked')) {
+			socket.emit('room creation', $('#room-name').val(), $('#room-password').val(), currentRoom);
+		} else if ($('#join-room').is(':checked')) {
+			socket.emit('room', $('#room-name').val(), $('#room-password').val(), currentRoom);
+		} else {
+			alert("Please select 'Create Room' or 'Join Room'");
+		}
+		return false;
+	});
+    socket.on('chat message', function(who, msg){
+      $("#messages").append("<li><strong><span style='color: blue'>" + "("  + who + ") " + "</strong><span style='color:black'>" + msg + "</li>");
+	  updateScroll();
+	});
+	socket.on('user joined', function(who, people){
+      $("#messages").append("<li>"  + who + " has connected to Tanner Chat" + "</li>");
+	  $("#users-in-room").append("<li>" + who + "</li>");
+	  $("#usersOnline").text("Tanner Chatter's Online " + Object.keys(people).length);
+    });
+	socket.on ('user disconnect', function(who, people){
+	  $("#messages").append("<li>"  + who + " has disconnected from Tanner Chat" + "</li>");
+	  $('li').filter(function() { return $.text([this]) === who; }).remove();
+	  $("#usersOnline").text("Tanner Chatter's Online " + (Object.keys(people).length - 1));
+	});
+	socket.on('room join success', function(newRoom){
+	  $('#current-room').text(newRoom);
+	  socket.emit('local message', "You joined the " + newRoom + " room");
+	  currentRoom = newRoom;
+	});
+	socket.on('initialize', function(people){
+	  socket.emit('room', "main");
+	  currentRoom = "main";
+	  $("#usersOnline").text("Tanner Chatter's Online " + Object.keys(people).length);
+	  for (var name in people) {
+		$("#users-in-room").append("<li>" + people[name] + "</li>");
+	  }
+    });
+  });
+</script>
+  </body>
+</html>
