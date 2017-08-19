@@ -4,7 +4,7 @@
   "description": "room based chat app",
   "main": "chat.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "chat.js"
   },
   "dependencies": {
 	"socket.io": "^2.0.3",
