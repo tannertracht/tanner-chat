@@ -1,0 +1,23 @@
+{
+  "name": "tanner-chat",
+  "version": "1.0.0",
+  "description": "room based chat app",
+  "main": "chat.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+	"socket.io": "^2.0.3",
+    "express": "^4.15.4",
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tannertracht/tanner-chat.git"
+  },
+  "author": "Tanner Tracht",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tannertracht/tanner-chat/issues"
+  },
+  "homepage": "https://github.com/tannertracht/tanner-chat#readme"
+}
